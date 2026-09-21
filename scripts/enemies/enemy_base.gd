@@ -190,8 +190,8 @@ func _avoid() -> Vector2:
 			continue
 		var d: Vector2 = global_position - e.global_position
 		var l := d.length()
-		if l < 16.0 and l > 0.1:
-			push += d / l * (16.0 - l) * 0.5
+		if l < 21.0 and l > 0.1:
+			push += d / l * (21.0 - l) * 0.6
 	return push
 
 

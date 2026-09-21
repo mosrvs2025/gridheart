@@ -12,7 +12,7 @@ var gap := 0
 var tint := TINT_ENEMY
 var centered := true
 var always_visible := false
-var idle_alpha := 0.88
+var idle_alpha := 0.45
 var backing := true
 var preview: Array = []
 
