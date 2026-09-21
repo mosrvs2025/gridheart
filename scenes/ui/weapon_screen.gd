@@ -14,6 +14,7 @@ var chosen := -1
 var _cards: Array = []
 var _title: Label
 var _help: Label
+var _painter: Control
 
 
 static func create(p: Player, opts: Array) -> WeaponScreen:
@@ -25,9 +26,15 @@ static func create(p: Player, opts: Array) -> WeaponScreen:
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	position = Vector2.ZERO
+	size = Ui.SCREEN
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(Ui.dim_layer())
+	# the pattern tiles are painted last so the cards do not cover them
+	_painter = Control.new()
+	_painter.size = Ui.SCREEN
+	_painter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_painter.draw.connect(_paint)
 	_title = Ui.label("AN ARMOURY, LONG ABANDONED", 16, Ui.GOLD)
 	_title.size = Vector2(480, 20)
 	_title.position = Vector2(0, 14)
@@ -38,6 +45,7 @@ func _ready() -> void:
 	_help.position = Vector2(0, 250)
 	_help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_help)
+	add_child(_painter)
 	_build()
 
 
@@ -45,44 +53,55 @@ func _build() -> void:
 	_clear_cards()
 	var entries: Array = options if chosen < 0 else player.slots
 	var count := entries.size()
-	var card_w := 132 if chosen < 0 else 108
-	var gap := 14
+	var card_w := 150 if chosen < 0 else 118
+	var card_h := 168 if chosen < 0 else 140
+	var gap := 12
 	var total := count * card_w + (count - 1) * gap
 	var x := (480 - total) * 0.5
+	var top := 48.0
 	for i in count:
 		var w: WeaponData = entries[i]
-		var card := Ui.panel(Vector2(x + i * (card_w + gap), 62), Vector2(card_w, 132))
+		var card := Ui.panel(Vector2(x + i * (card_w + gap), top), Vector2(card_w, card_h))
 		add_child(card)
 		_cards.append(card)
 		var icon := TextureRect.new()
 		icon.texture = Art.tex(w.icon_name)
-		icon.position = card.position + Vector2(card_w * 0.5 - 8, 10)
+		icon.position = card.position + Vector2(card_w * 0.5 - 8, 8)
 		icon.size = Vector2(16, 16)
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(icon)
-		var name_label := Ui.label(w.display_name, 8, Ui.INK)
-		name_label.position = card.position + Vector2(0, 30)
-		name_label.size = Vector2(card_w, 12)
-		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		add_child(name_label)
-		var stats := Ui.label("pen %d   plate %d" % [w.penetration, w.armor_break], 8, Ui.DIM)
-		stats.position = card.position + Vector2(0, 100)
-		stats.size = Vector2(card_w, 12)
-		stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		add_child(stats)
+		_label(w.display_name, card.position + Vector2(0, 26), card_w, Ui.INK)
+		if chosen < 0:
+			# autowrap has to be set before the size, or the label keeps the
+			# minimum width of its unwrapped text
+			var blurb := Ui.label(w.blurb, 8, Ui.DIM)
+			blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			blurb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			blurb.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+			blurb.custom_minimum_size = Vector2(card_w - 16, 44)
+			blurb.size = Vector2(card_w - 16, 44)
+			blurb.position = card.position + Vector2(8, 98)
+			add_child(blurb)
+		_label("pierce %d    plate %d" % [w.penetration, w.armor_break],
+			card.position + Vector2(0, card_h - 20), card_w, Ui.DIM)
 		var key := Ui.label(str(i + 1), 8, Ui.GOLD)
 		key.position = card.position + Vector2(5, 4)
 		add_child(key)
 		if chosen >= 0:
-			var swap := Ui.label("replace", 8, Ui.BAD)
-			swap.position = card.position + Vector2(0, 114)
-			swap.size = Vector2(card_w, 12)
-			swap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			add_child(swap)
+			_label("replace", card.position + Vector2(0, card_h - 34), card_w, Ui.BAD)
 	if chosen >= 0:
 		_title.text = "WHICH SLOT?"
 		_help.text = "click a slot, or press 1 2 3"
-	queue_redraw()
+	move_child(_painter, get_child_count() - 1)
+	_painter.queue_redraw()
+
+
+func _label(text: String, at: Vector2, width: int, colour: Color) -> void:
+	var l := Ui.label(text, 8, colour)
+	l.position = at
+	l.size = Vector2(width, 12)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(l)
 
 
 func _clear_cards() -> void:
@@ -118,7 +137,7 @@ func _pick(i: int) -> void:
 	queue_free()
 
 
-func _draw() -> void:
+func _paint() -> void:
 	var entries: Array = options if chosen < 0 else player.slots
 	for i in _cards.size():
 		if i >= entries.size():
@@ -126,5 +145,5 @@ func _draw() -> void:
 		var w: WeaponData = entries[i]
 		var pattern: Array = w.pattern
 		var size := Ui.shape_pixel_size(pattern, CELL)
-		var at: Vector2 = _cards[i].position + Vector2((_cards[i].size.x - size.x) * 0.5, 50)
-		Ui.draw_shape(self, pattern, at, CELL, HealthGridView.TINT_ENEMY)
+		var at: Vector2 = _cards[i].position + Vector2((_cards[i].size.x - size.x) * 0.5, 44)
+		Ui.draw_shape(_painter, pattern, at, CELL, HealthGridView.TINT_ENEMY)

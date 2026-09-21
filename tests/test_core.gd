@@ -183,6 +183,23 @@ func _check_growth_and_heal() -> void:
 	grid.heal([Vector2i(0, 0)], rect.position)
 	ok("mending restores the cell", grid.get_cell(rect.position).alive)
 
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var whole := HealthGrid.seeded(9, 2, 2)
+	ok("an unbroken grid is offered no mend", Shapes.pick_heal(rng, whole).is_empty())
+	var one_hole := HealthGrid.seeded(9, 2, 2)
+	var origin := one_hole.used_rect().position
+	one_hole.get_cell(origin).alive = false
+	ok("a single hole is too small for any mend, so none is offered",
+		Shapes.pick_heal(rng, one_hole).is_empty())
+
+	var two_holes := HealthGrid.seeded(9, 2, 2)
+	two_holes.get_cell(origin).alive = false
+	two_holes.get_cell(origin + Vector2i(1, 0)).alive = false
+	var offer := Shapes.pick_heal(rng, two_holes)
+	ok("two holes are offered a mend that fits them",
+		not offer.is_empty() and Shapes.fits(two_holes, offer.cells, true))
+
 
 func _check_enemy_shapes() -> void:
 	print("\nenemy layouts")

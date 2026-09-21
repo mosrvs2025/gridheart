@@ -24,8 +24,9 @@ static func create(heading: String, body: String, footer: String,
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	position = Vector2.ZERO
+	size = Ui.SCREEN
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(Ui.dim_layer(0.82))
 	var h := Ui.title(heading, 16 if not show_logo else 24, accent)
 	h.size = Vector2(480, 30)

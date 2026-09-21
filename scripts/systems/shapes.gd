@@ -57,10 +57,33 @@ static func pick_growth(count: int, rng: RandomNumberGenerator) -> Array:
 		var idx := rng.randi_range(0, pool.size() - 1)
 		var entry: Dictionary = pool[idx]
 		pool.remove_at(idx)
-		out.append({"name": entry.name, "cells": rotate(entry.cells, rng.randi_range(0, 3))})
+		out.append({"name": entry.name, "cells": entry.cells.duplicate()})
 	return out
 
 
-static func pick_heal(rng: RandomNumberGenerator) -> Dictionary:
-	var entry: Dictionary = HEAL[rng.randi_range(0, HEAL.size() - 1)]
+## True when the shape has at least one legal home on the grid, in any turn.
+static func fits(grid: HealthGrid, cells: Array, heal: bool) -> bool:
+	for turn in 4:
+		var turned := rotate(cells, turn)
+		for y in grid.height:
+			for x in grid.width:
+				var at := Vector2i(x, y)
+				if heal:
+					if grid.can_heal(turned, at):
+						return true
+				elif grid.can_attach(turned, at):
+					return true
+	return false
+
+
+## Offers a mend the wounds can actually take. Handing the player a shape too
+## big for the holes in their grid is just a screen they cannot answer.
+static func pick_heal(rng: RandomNumberGenerator, grid: HealthGrid) -> Dictionary:
+	var usable := []
+	for entry in HEAL:
+		if fits(grid, entry.cells, true):
+			usable.append(entry)
+	if usable.is_empty():
+		return {}
+	var entry: Dictionary = usable[rng.randi_range(0, usable.size() - 1)]
 	return {"name": entry.name, "cells": entry.cells.duplicate()}

@@ -6,6 +6,10 @@ const FONT := "res://assets/Silkscreen-Regular.ttf"
 const FONT_BOLD := "res://assets/Silkscreen-Bold.ttf"
 const TITLE_FONT := "res://assets/PressStart2P-Regular.ttf"
 
+## The game renders at a fixed 480x270 and scales up, so overlays can size
+## themselves against it directly.
+const SCREEN := Vector2(480, 270)
+
 const INK := Color(0.95, 0.92, 0.86)
 const DIM := Color(0.72, 0.68, 0.7)
 const GOLD := Color(0.96, 0.79, 0.41)
@@ -53,8 +57,9 @@ static func panel(pos: Vector2, size: Vector2, fill := BG) -> Panel:
 static func dim_layer(alpha := 0.74) -> ColorRect:
 	var c := ColorRect.new()
 	c.color = Color(0.07, 0.05, 0.09, alpha)
-	c.set_anchors_preset(Control.PRESET_FULL_RECT)
-	c.mouse_filter = Control.MOUSE_FILTER_STOP
+	c.position = Vector2.ZERO
+	c.size = SCREEN
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return c
 
 

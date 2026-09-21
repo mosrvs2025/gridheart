@@ -46,6 +46,11 @@ static func shards(parent: Node, pos: Vector2, count := 4, color := Color(1, 0.9
 		tw.chain().tween_callback(s.queue_free)
 
 
+## Where each effect strip's own origin sits, so a swing pivots on the hand
+## rather than on the middle of its texture.
+const PIVOTS := {"fx_slash": Vector2(14, 0), "fx_thrust": Vector2(16, 0), "fx_slam": Vector2.ZERO}
+
+
 ## A one-shot animated sprite for swings and slams.
 static func swing(parent: Node, pos: Vector2, angle: float, strip: String,
 		duration := 0.18, flip_v := false, color := Color(1, 1, 1)) -> void:
@@ -57,6 +62,7 @@ static func swing(parent: Node, pos: Vector2, angle: float, strip: String,
 	var s := Sprite2D.new()
 	s.texture = frames[0]
 	s.position = pos
+	s.offset = PIVOTS.get(strip, Vector2.ZERO)
 	s.rotation = angle
 	s.flip_v = flip_v
 	s.modulate = color

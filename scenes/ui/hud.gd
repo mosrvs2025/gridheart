@@ -7,6 +7,9 @@ var player: Player
 var grid_view: HealthGridView
 
 var _grid_panel: Panel
+var _boss_panel: Panel
+var _boss_name: Label
+var boss_view: HealthGridView
 var _slot_icons: Array[TextureRect] = []
 var _slot_cds: Array[ColorRect] = []
 var _room_label: Label
@@ -77,6 +80,36 @@ func _ready() -> void:
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint.modulate.a = 0.0
 	root.add_child(_hint)
+
+
+## A boss grid is too big to float over the arena, so it becomes the header.
+func bind_boss(enemy: Enemy) -> void:
+	unbind_boss()
+	var root := get_child(0)
+	boss_view = HealthGridView.new()
+	boss_view.always_visible = true
+	boss_view.centered = false
+	boss_view.setup(enemy.grid, 12, false)
+	var size := boss_view.grid_pixel_size()
+	_boss_panel = Ui.panel(Vector2(240 - size.x * 0.5 - 5, 20), size + Vector2(10, 10))
+	root.add_child(_boss_panel)
+	boss_view.position = Vector2(240 - size.x * 0.5, 25)
+	root.add_child(boss_view)
+	_boss_name = Ui.label(String(enemy.data.name).to_upper(), 8, Ui.GOLD)
+	_boss_name.position = Vector2(0, 6)
+	_boss_name.size = Vector2(480, 12)
+	_boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	root.add_child(_boss_name)
+	enemy.defeated.connect(func(_e): unbind_boss())
+
+
+func unbind_boss() -> void:
+	for n in [_boss_panel, _boss_name, boss_view]:
+		if n != null and is_instance_valid(n):
+			n.queue_free()
+	_boss_panel = null
+	_boss_name = null
+	boss_view = null
 
 
 func bind(p: Player) -> void:

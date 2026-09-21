@@ -77,7 +77,8 @@ func _ready() -> void:
 	_grid_view.position = Vector2(0, grid_view_height())
 	_grid_view.z_index = 25
 	if data.get("boss", false):
-		_grid_view.always_visible = true
+		# the boss's grid is shown in the HUD instead, where it has room
+		_grid_view.visible = false
 	add_child(_grid_view)
 	player = get_tree().get_first_node_in_group("player")
 	_on_ready_extra()
@@ -216,7 +217,7 @@ func _strike(to_player: Vector2) -> void:
 	if data.get("contact", false):
 		velocity = dir * 190.0
 	if to_player.length() <= data.attack_range + 10.0:
-		Fx.swing(get_parent(), global_position + dir * 12.0 + Vector2(0, -3), dir.angle(),
+		Fx.swing(get_parent(), global_position + Vector2(0, -3), dir.angle(),
 			"fx_slash", 0.16, dir.x < 0.0, Color(1, 0.8, 0.75))
 		player.take_hit(attack, dir, global_position, self)
 

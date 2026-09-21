@@ -94,7 +94,7 @@ func _strike(to_player: Vector2) -> void:
 		Sfx.play("swing_heavy", -8.0)
 		return
 	Sfx.play("swing_heavy", -10.0)
-	Fx.swing(get_parent(), global_position + dir * 22.0 + Vector2(0, -8), dir.angle(),
+	Fx.swing(get_parent(), global_position + dir * 18.0 + Vector2(0, -8), dir.angle(),
 		"fx_slam", 0.22, false, Color(1, 0.85, 0.7))
 	Game.shake(2.5)
 	if to_player.length() <= data.attack_range + 16.0:

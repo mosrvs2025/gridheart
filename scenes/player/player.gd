@@ -223,8 +223,8 @@ func _land_attack() -> void:
 	if w.kind == WeaponData.Kind.SHOOT:
 		_shoot(w)
 		return
-	Fx.swing(get_parent(), origin + _attack_dir * (w.reach * 0.45) + Vector2(0, -3),
-		_attack_dir.angle(), w.fx, 0.16, _attack_dir.x < 0.0)
+	Fx.swing(get_parent(), origin + Vector2(0, -3), _attack_dir.angle(), w.fx, 0.16,
+		_attack_dir.x < 0.0)
 	var hits := 0
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if hits >= w.max_targets or not is_instance_valid(e) or not e.is_alive():

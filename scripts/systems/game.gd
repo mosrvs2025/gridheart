@@ -23,6 +23,7 @@ var _fade: ColorRect
 var _ui_layer: CanvasLayer
 var _cursor: Sprite2D
 var _door_open := false
+var _ended := false
 
 
 ## Debug entry points, handy when working on a late room: append ?room=6 (or
@@ -82,6 +83,7 @@ func _show_title() -> void:
 
 func _start_run() -> void:
 	Run.start()
+	_ended = false
 	if player != null:
 		player.queue_free()
 	player = Player.create()
@@ -122,6 +124,7 @@ func _load_room(index: int) -> void:
 	room = RoomsData.get_room(index)
 	if room_node != null:
 		room_node.queue_free()
+	hud.unbind_boss()
 	room_node = Node2D.new()
 	room_node.name = "Room"
 	room_node.y_sort_enabled = true
@@ -204,6 +207,8 @@ func _spawn_enemy(id: String, at: Vector2) -> void:
 	room_node.add_child(e)
 	enemies_left += 1
 	e.defeated.connect(_on_enemy_defeated)
+	if EnemyData.get_data(id).get("boss", false):
+		hud.bind_boss(e)
 	e.grid.cells_destroyed.connect(func(c): Run.cells_destroyed += c.size())
 
 
@@ -255,23 +260,16 @@ func _give_reward(kind: String) -> void:
 
 func _growth_screen() -> void:
 	var opts := Shapes.pick_growth(3, Run.rng)
-	var s := ShapeScreen.create(player, ShapeScreen.Mode.GROWTH, opts)
-	_ui_layer.add_child(s)
-	get_tree().paused = true
-	s.process_mode = Node.PROCESS_MODE_ALWAYS
-	await s.finished
-	get_tree().paused = false
+	await _run_screen(ShapeScreen.create(player, ShapeScreen.Mode.GROWTH, opts))
 
 
 func _heal_screen() -> void:
 	if player.grid.alive_count() >= player.grid.total_count():
 		return
-	var s := ShapeScreen.create(player, ShapeScreen.Mode.HEAL, [Shapes.pick_heal(Run.rng)])
-	_ui_layer.add_child(s)
-	get_tree().paused = true
-	s.process_mode = Node.PROCESS_MODE_ALWAYS
-	await s.finished
-	get_tree().paused = false
+	var shape := Shapes.pick_heal(Run.rng, player.grid)
+	if shape.is_empty():
+		return
+	await _run_screen(ShapeScreen.create(player, ShapeScreen.Mode.HEAL, [shape]))
 
 
 func _weapon_screen() -> void:
@@ -283,12 +281,32 @@ func _weapon_screen() -> void:
 	for id in pool.slice(0, 2):
 		opts.append(Weapons.make(id))
 		Run.unlocked.append(id)
-	var s := WeaponScreen.create(player, opts)
-	_ui_layer.add_child(s)
+	await _run_screen(WeaponScreen.create(player, opts))
+
+
+func _input(event: InputEvent) -> void:
+	# with ?god=1, K clears the room - for looking at the screens that come after
+	if not god_mode or not (event is InputEventKey and event.pressed and event.keycode == KEY_K):
+		return
+	var sweep := WeaponData.new()
+	sweep.damage = 9
+	sweep.penetration = 9
+	sweep.armor_break = 9
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(e) and e.is_alive():
+			e.grid.apply_pattern(e.grid.occupied_coords(), Vector2i.ZERO, sweep)
+
+
+## Puts one of the between-rooms screens up: pause, hand it the whole display,
+## and give the HUD back when it closes.
+func _run_screen(screen: Control) -> void:
+	hud.visible = false
+	_ui_layer.add_child(screen)
+	screen.process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().paused = true
-	s.process_mode = Node.PROCESS_MODE_ALWAYS
-	await s.finished
+	await screen.finished
 	get_tree().paused = false
+	hud.visible = true
 
 
 func _process(delta: float) -> void:
@@ -336,6 +354,9 @@ func _next_room() -> void:
 
 
 func _on_player_died() -> void:
+	if _ended:
+		return
+	_ended = true
 	await get_tree().create_timer(1.1).timeout
 	var s := MessageScreen.create(
 		"YOUR GRID IS EMPTY",
@@ -345,9 +366,14 @@ func _on_player_died() -> void:
 	s.dismissed.connect(_start_run)
 
 
+## The end of a run waits out any transition in progress rather than being
+## dropped by it.
 func _victory() -> void:
-	if busy:
+	if _ended:
 		return
+	_ended = true
+	while busy:
+		await get_tree().process_frame
 	busy = true
 	Sfx.play("victory", -4.0)
 	await get_tree().create_timer(1.6).timeout
