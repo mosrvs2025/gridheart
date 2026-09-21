@@ -59,7 +59,7 @@ func _ready() -> void:
 	add_child(_painter)
 	if mode == Mode.GROWTH:
 		_title.text = "CHOOSE YOUR GROWTH"
-		_help.text = "click a shape, or press 1 2 3"
+		_help.text = "press 1 2 3, or click a shape"
 		_build_cards()
 	else:
 		_title.text = "MEND WHAT YOU CAN"
@@ -104,7 +104,7 @@ func _begin_placing() -> void:
 			child.queue_free()
 	move_child(_painter, get_child_count() - 1)
 	_title.text = "PLACE IT" if mode == Mode.GROWTH else "PLACE THE %s" % String(options[0].name).to_upper()
-	_help.text = "move with the mouse   R to turn   click to place"
+	_help.text = "WASD or arrows to move   R to turn   enter to place"
 	if mode == Mode.HEAL:
 		_help.text += "   esc to leave it"
 	_rect = player.grid.used_rect().grow(2 if mode == Mode.GROWTH else 0)
@@ -132,6 +132,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		if c != cursor:
 			cursor = c
 			_redraw()
+	var step := Vector2i(
+		int(Input.is_action_just_pressed("cursor_right")) - int(Input.is_action_just_pressed("cursor_left")),
+		int(Input.is_action_just_pressed("cursor_down")) - int(Input.is_action_just_pressed("cursor_up")))
+	if step != Vector2i.ZERO:
+		# held inside the region being drawn, so the ghost is always on screen
+		cursor = (cursor + step).clamp(_rect.position, _rect.end - Vector2i.ONE)
+		Sfx.play("ui_move", -18.0)
+		_redraw()
 	if Input.is_action_just_pressed("rotate_shape"):
 		rotation_steps += 1
 		shape = Shapes.rotate(shape, 1)

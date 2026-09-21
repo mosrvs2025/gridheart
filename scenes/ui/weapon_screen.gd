@@ -40,7 +40,7 @@ func _ready() -> void:
 	_title.position = Vector2(0, 14)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_title)
-	_help = Ui.label("click a weapon, or press 1 2", 8, Ui.DIM)
+	_help = Ui.label("press 1 2, or click a weapon", 8, Ui.DIM)
 	_help.size = Vector2(480, 12)
 	_help.position = Vector2(0, 250)
 	_help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -91,7 +91,7 @@ func _build() -> void:
 			_label("replace", card.position + Vector2(0, card_h - 34), card_w, Ui.BAD)
 	if chosen >= 0:
 		_title.text = "WHICH SLOT?"
-		_help.text = "click a slot, or press 1 2 3"
+		_help.text = "press 1 2 3, or click a slot"
 	move_child(_painter, get_child_count() - 1)
 	_painter.queue_redraw()
 

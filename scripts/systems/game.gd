@@ -74,8 +74,8 @@ static func shake(amount: float) -> void:
 func _show_title() -> void:
 	var s := MessageScreen.create(
 		"GRIDHEART",
-		"your health is not a number - it is a shape\nweapons cut patterns out of it\n\nWASD move    mouse aim    click attack\nspace dodge    1 2 3 weapons",
-		"click to begin", Ui.GOLD, true)
+		"your health is not a number - it is a shape\nweapons cut patterns out of it\n\nWASD move    arrow keys attack in that direction\nor aim with the mouse and click    F swings where you face\nspace dodge    1 2 3 or tab for weapons",
+		"press enter or click to begin", Ui.GOLD, true)
 	_ui_layer.add_child(s)
 	_fade.color.a = 0.0
 	s.dismissed.connect(_start_run)
@@ -160,7 +160,7 @@ func _load_room(index: int) -> void:
 
 ## A line of teaching where it is needed, then out of the way again.
 const HINTS := {
-	0: "WASD move    mouse aim    click attack    space dodge",
+	0: "WASD move    arrows attack that way    or mouse aim and click    space dodge",
 	1: "their health is the grid above them - where you strike decides which cells go",
 	2: "1 2 3 change weapon - each one cuts a different shape",
 	3: "archers keep their distance, so close it or take the shot",
@@ -311,7 +311,12 @@ func _run_screen(screen: Control) -> void:
 
 func _process(delta: float) -> void:
 	if _cursor != null:
-		_cursor.global_position = get_global_mouse_position().round()
+		# on the keyboard there is no pointer to draw, so the reticle sits out
+		# in front of the character and shows the same thing: where a swing goes
+		var at := get_global_mouse_position()
+		if player != null and is_instance_valid(player) and not player.aiming_with_mouse():
+			at = player.aim_point()
+		_cursor.global_position = at.round()
 	if busy or player == null or not player.alive():
 		return
 	_check_interactions()
@@ -361,7 +366,7 @@ func _on_player_died() -> void:
 	var s := MessageScreen.create(
 		"YOUR GRID IS EMPTY",
 		"%s rooms cleared in %s\n%d enemy cells broken" % [Run.rooms_cleared, Run.elapsed_text(), Run.cells_destroyed],
-		"click to try again", Ui.BAD)
+		"press enter or click to try again", Ui.BAD)
 	_ui_layer.add_child(s)
 	s.dismissed.connect(_start_run)
 
@@ -381,7 +386,7 @@ func _victory() -> void:
 		"THE SOVEREIGN FALLS",
 		"cleared in %s\n%d cells taken, %d of yours lost\nyour grid ended at %d cells" % [
 			Run.elapsed_text(), Run.cells_destroyed, Run.cells_lost, player.grid.alive_count()],
-		"click to run again", Ui.GOLD)
+		"press enter or click to run again", Ui.GOLD)
 	_ui_layer.add_child(s)
 	s.dismissed.connect(_start_run)
 

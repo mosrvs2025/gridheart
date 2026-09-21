@@ -35,6 +35,8 @@ var _dodge_dir := Vector2.RIGHT
 var _pending_attack := false
 var _attack_dir := Vector2.RIGHT
 var _trail := 0.0
+var _aim_mouse := true   ## the mouse owns the aim until the keyboard takes it
+var _fire_dir := Vector2.ZERO
 
 @onready var sprite: AnimatedSprite2D = $Sprite
 @onready var shadow: Sprite2D = $Shadow
@@ -92,6 +94,16 @@ func aim_offset() -> Vector2:
 	return aim * 16.0
 
 
+## Where the reticle belongs. On the keyboard there is no pointer to follow,
+## so it rides out in front of the character instead.
+func aim_point() -> Vector2:
+	return global_position + Vector2(0, -3) + aim * 26.0
+
+
+func aiming_with_mouse() -> bool:
+	return _aim_mouse
+
+
 func alive() -> bool:
 	return state != State.DEAD
 
@@ -119,11 +131,31 @@ func _physics_process(delta: float) -> void:
 	_animate(delta)
 
 
+## Whoever spoke last decides where the swing points: the pointer, an arrow
+## key, or - failing both - the direction you are walking.
 func _update_aim() -> void:
-	var m := get_global_mouse_position()
-	var d := m - global_position
-	if d.length() > 2.0:
-		aim = d.normalized()
+	_fire_dir = Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
+	if _fire_dir.length_squared() > 0.01:
+		_aim_mouse = false
+		aim = _fire_dir.normalized()
+		return
+	if Input.is_action_pressed("attack_key"):
+		_aim_mouse = false
+	if _aim_mouse:
+		var d := get_global_mouse_position() - global_position
+		if d.length() > 2.0:
+			aim = d.normalized()
+		return
+	var move := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if move.length_squared() > 0.01:
+		aim = move.normalized()
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion and event.relative.length_squared() > 0.0:
+		_aim_mouse = true
+	elif event is InputEventMouseButton and event.pressed:
+		_aim_mouse = true
 
 
 func _read_input(delta: float) -> void:
@@ -134,10 +166,17 @@ func _read_input(delta: float) -> void:
 			slot = i
 			weapon_switched.emit(i)
 			Sfx.play("ui_move", -14.0)
+	if Input.is_action_just_pressed("cycle_weapon") and slots.size() > 1:
+		slot = (slot + 1) % slots.size()
+		weapon_switched.emit(slot)
+		Sfx.play("ui_move", -14.0)
 	if Input.is_action_just_pressed("dodge") and _dodge_cd <= 0.0:
 		_start_dodge()
 		return
-	if Input.is_action_pressed("attack") and state != State.ATTACK and _cooldowns[slot] <= 0.0:
+	# an aim key is a swing as well as a turn, so the keyboard never needs a
+	# separate button to be pressed at the same time
+	var firing := Input.is_action_pressed("attack") or _fire_dir.length_squared() > 0.01
+	if firing and state != State.ATTACK and _cooldowns[slot] <= 0.0:
 		_start_attack()
 		return
 	if state == State.ATTACK:

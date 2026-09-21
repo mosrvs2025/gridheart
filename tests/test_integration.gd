@@ -110,6 +110,42 @@ func _run() -> void:
 	await get_tree().process_frame
 	ok("the player dies when the last cell goes", died[0] and not player.alive())
 
+	print("\nthe keyboard aims and swings on its own")
+	var kp := Player.create()
+	stage.add_child(kp)
+	kp.global_position = Vector2(0, -200)
+	await get_tree().process_frame
+	ok("the aim keys are bound", InputMap.has_action("aim_up") and InputMap.has_action("attack_key"))
+	Input.action_press("aim_up")
+	kp._update_aim()
+	ok("an aim key points the swing", kp.aim.is_equal_approx(Vector2.UP))
+	ok("...and takes the aim off the mouse", not kp.aiming_with_mouse())
+	kp._read_input(0.016)
+	ok("...and is a swing by itself", kp.state == Player.State.ATTACK)
+	Input.action_release("aim_up")
+
+	kp.state = Player.State.IDLE
+	kp._cooldowns[kp.slot] = 0.0
+	Input.action_press("move_left")
+	Input.action_press("attack_key")
+	Input.action_press("attack")
+	kp._update_aim()
+	ok("F swings the way you are walking", kp.aim.is_equal_approx(Vector2.LEFT))
+	kp._read_input(0.016)
+	ok("...and that is a swing too", kp.state == Player.State.ATTACK)
+	Input.action_release("move_left")
+	Input.action_release("attack_key")
+	Input.action_release("attack")
+
+	kp.state = Player.State.IDLE
+	kp._update_aim()
+	var first_slot := kp.slot
+	Input.action_press("cycle_weapon")
+	kp._read_input(0.016)
+	Input.action_release("cycle_weapon")
+	ok("tab moves along the weapon slots", kp.slot != first_slot)
+	kp.queue_free()
+
 	print("\nevery room builds")
 	for i in RoomsData.count():
 		var room_node := Node2D.new()

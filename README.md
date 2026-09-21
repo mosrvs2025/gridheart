@@ -37,15 +37,26 @@ physically build the body you fight with.
 
 ## Controls
 
+Play it with a hand on the mouse or without one; neither is a fallback for the
+other, and you can switch mid-fight. The reticle follows whichever you used last.
+
 | | |
 |---|---|
 | `WASD` | move |
+| arrow keys / `IJKL` | aim **and** attack in that direction |
+| `F` | attack the way you are already facing |
 | mouse | aim |
 | left click | attack |
-| `space` | dodge |
+| `space` / `shift` | dodge |
 | `1` `2` `3` | weapon slots |
+| `tab` / `Q` | next weapon |
 | `E` / `enter` | interact, confirm |
 | `R` | turn a shape while placing it |
+| `WASD` / arrows | move the shape while placing it |
+| `esc` | decline a mend |
+
+With no mouse at all the aim falls back to the way you are walking, so `F` always
+swings forward.
 
 ## The run
 

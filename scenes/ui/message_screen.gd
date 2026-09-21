@@ -6,7 +6,7 @@ signal dismissed
 
 var heading := ""
 var body := ""
-var footer := "click to begin"
+var footer := "press enter or click to begin"
 var accent := Ui.GOLD
 var show_logo := false
 
