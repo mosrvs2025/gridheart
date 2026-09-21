@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
-		<title>Gridheart</title>
+		<title>$GODOT_PROJECT_NAME</title>
 		<style>
 
 @font-face { font-family: 'Gridheart Title'; src: url('title.ttf') format('truetype'); font-display: block; }
@@ -73,9 +73,7 @@ body {
 	padding: 14px 18px;
 }
 		</style>
-		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
-<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
-
+		$GODOT_HEAD_INCLUDE
 	</head>
 	<body>
 		<canvas id="canvas">
@@ -94,10 +92,10 @@ body {
 			<div id="status-notice"></div>
 		</div>
 
-		<script src="index.js"></script>
+		<script src="$GODOT_URL"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":612992,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
-const GODOT_THREADS_ENABLED = false;
+const GODOT_CONFIG = $GODOT_CONFIG;
+const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 const engine = new Engine(GODOT_CONFIG);
 
 (function () {
@@ -218,4 +216,3 @@ const engine = new Engine(GODOT_CONFIG);
 		</script>
 	</body>
 </html>
-

@@ -99,6 +99,17 @@ func _run() -> void:
 		await get_tree().process_frame
 	ok("a slime dies once every cell is gone", killed[0] and slime.grid.alive_count() == 0)
 
+	print("\nan emptied player grid ends the run")
+	var died := [false]
+	player.died.connect(func(): died[0] = true)
+	var wipe := WeaponData.new()
+	wipe.damage = 9
+	wipe.penetration = 9
+	wipe.armor_break = 9
+	player.grid.apply_pattern(player.grid.occupied_coords(), Vector2i.ZERO, wipe)
+	await get_tree().process_frame
+	ok("the player dies when the last cell goes", died[0] and not player.alive())
+
 	print("\nevery room builds")
 	for i in RoomsData.count():
 		var room_node := Node2D.new()

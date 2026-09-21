@@ -69,8 +69,11 @@ cd art && python3 build.py && python3 make_sfx.py
 godot --headless --script tests/test_core.gd
 godot --headless tests/integration.tscn
 
+# run a whole run, start to finish, in one headless pass
+godot --headless tests/run.tscn
+
 # export the web build into docs/, which is what GitHub Pages serves
-godot --headless --export-release "Web" docs/index.html
+tools/export_web.sh
 ```
 
 The web export is the single-threaded variant on purpose: GitHub Pages cannot
