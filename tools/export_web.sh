@@ -5,6 +5,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 GODOT="${GODOT:-godot}"
 "$GODOT" --headless --export-release "Web" docs/index.html
+# .gdignore keeps Godot from importing its own build output back into the project
+touch docs/.gdignore
 cp assets/PressStart2P-Regular.ttf docs/title.ttf
 cp assets/Silkscreen-Regular.ttf docs/body.ttf
 touch docs/.nojekyll
